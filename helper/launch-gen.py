@@ -1,33 +1,10 @@
-#
-# import os 
-  
-# uav_num = 10
-# root = minidom.Document()
-  
-# xml = root.createElement('launch') 
-# root.appendChild(xml)
-  
-# productChild = root.createElement('group')
-# root.appendChild(xml)
-# productChild.setAttribute('ns', 'uav0')
-# #productChild.setAttribute('default', 'ekf2')
-
-  
-# xml.appendChild(productChild)
-  
-# xml_str = root.toprettyxml(indent ="\t") 
-  
-# save_path_file = str(uav_num) + "test_uav_mavros_sitl.launch"
-  
-# with open(save_path_file, "w") as f:
-#     f.write(xml_str) 
-
 import xml.etree.cElementTree as ET
-#from ElementTree_pretty import prettify
 import numpy as np
 from xml.etree import ElementTree
 from xml.dom import minidom
 import argparse
+import math
+import matplotlib.pyplot as plt
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -36,9 +13,26 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
-def GenerateLaunch(agent_number, file_name):
+def GenerateRelPosition(agent_number, circle_radius):
+	num_agent = agent_number
+	radius = circle_radius
+	coord2D = np.zeros((agent_number,3))
+	base = 10/180.0
+	print("base is ", base)
+
+	for i in range(1,agent_number):
+		theta = 2 * math.pi * (i-1) /  (agent_number-1) + base
+		print("theta is ",theta)
+		coord2D[i] = [radius * math.cos(theta), radius * math.sin(theta), theta]
+
+	return np.round(coord2D,10)
+
+
+def GenerateMavrosLaunch(agent_number, formation_radius, file_name):
 	num_agent = agent_number
 	fname = file_name
+	radius = formation_radius
+
 	"""
 	MAVROS posix SITL environment launch script
 	launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle
@@ -64,8 +58,8 @@ def GenerateLaunch(agent_number, file_name):
 	ET.SubElement(include, "arg", name="verbose", value="$(arg verbose)")
 	ET.SubElement(include, "arg", name="paused", value="$(arg paused)")
 
-	#num_agent = 25
-	start_coord2D = np.random.rand(num_agent,2)
+	start_coord2D = GenerateRelPosition(num_agent, radius)
+	#start_coord2D = np.random.rand(num_agent,2)
 	print(start_coord2D)
 
 	for i in range(num_agent):
@@ -104,26 +98,56 @@ def GenerateLaunch(agent_number, file_name):
 		ET.SubElement(include_sub1, "arg", name="tgt_component", value="1")
 
 
-		# doc = ET.SubElement(root, "doc")
-		# #arg1 = ET.SubElement(root, "arg")
-		# ET.SubElement(doc, "arg", name="x", value="0")
+		pretty_root = prettify(root)
+		tree = ET.ElementTree(ET.fromstring(pretty_root))
+		tree.write(fname+".launch")
 
-		# string = "blah"
-		# ET.SubElement(doc, "field1", ns=string).text = "some value1"
-		# ET.SubElement(doc, "field2", name="asdfasd", value="0").text = "some vlaue2"
+def GenerateFormationLaunch(agent_number, formation_radius, file_name):
+	num_agent = agent_number
+	fname = file_name + ".launch"
+	fobj = open("../launch/" + fname, "w")
+	radius = formation_radius
+
+	"""
+	formation controller node launchers
+	"""
+	
+	root = ET.Element("launch")
+	start_coord2D = GenerateRelPosition(num_agent, radius)
+	#start_coord2D = np.random.rand(num_agent,2)
+	print(start_coord2D)
+
+	for i in range(num_agent):
+		agent_id = "uav"+str(i)
+		uav_id = i
+		node_name = "formation"+str(i)
+
+		node = ET.SubElement(root, "node", pkg = "formation_controller", type = "formation_controller_node", name = node_name, output = "screen")
+		ET.SubElement(node, "param", name="agent_id", value=agent_id)
+		ET.SubElement(node, "param", name="uav_id", value=str(uav_id))
+		ET.SubElement(node, "param", name="x_offset", value=str(start_coord2D[i][0]))
+		ET.SubElement(node, "param", name="y_offset", value=str(start_coord2D[i][1]))
+		ET.SubElement(node, "param", name="z_offset", value=str(0))
 
 		pretty_root = prettify(root)
 		tree = ET.ElementTree(ET.fromstring(pretty_root))
 
-		#tree = ET.ElementTree(root)
-		#fname = str(num_agent) + "_uav_mavros_sitl"
-		tree.write(fname+".launch")
+		
+		
+		#tree.write(fname+".launch")
+	tree.write(fobj)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Generate ROS launch file for multi-uav sitl')
 	parser.add_argument('--num_agent', required=True, help='number of agent')
+	parser.add_argument('--radius', required=True, help='radius of circle formation')
 	args = parser.parse_args()
 	agent_number = int(args.num_agent)
+	radius = int(args.radius)
 	assert agent_number<=10, "Agent number must be less than or equal to 10"
-	file_name = str(agent_number) + "_uav_mavros_sitl"
-	GenerateLaunch(agent_number, file_name)
+	assert radius>0, "Radius must be positive"
+	file_name = str(radius) + "m_radius_" + str(agent_number) + "_uav_mavros_sitl"
+	GenerateMavrosLaunch(agent_number, radius, file_name)
+
+	file_name_formation = "formation_flt_" + str(radius) + "m_radius_" + str(agent_number) + "_uav"
+	GenerateFormationLaunch(agent_number, radius, file_name_formation)

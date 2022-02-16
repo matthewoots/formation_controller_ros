@@ -1,0 +1,141 @@
+<launch>
+  <arg name="est" value="ekf2" />
+  <arg name="vehicle" value="iris" />
+  <arg name="world" value="$(find mavlink_sitl_gazebo)/worlds/empty.world" />
+  <arg name="gui" value="true" />
+  <arg name="debug" value="false" />
+  <arg name="verbose" value="false" />
+  <arg name="paused" value="false" />
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="world_name" value="$(arg world)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="verbose" value="$(arg verbose)" />
+    <arg name="paused" value="$(arg paused)" />
+  </include>
+  <group ns="uav0">
+    <arg name="ID" value="0" />
+    <arg default="udp://:14540@localhost:14580" name="fcu_url" />
+    <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+      <arg name="x" value="0.0" />
+      <arg name="y" value="0.0" />
+      <arg name="z" value="0" />
+      <arg name="R" value="0" />
+      <arg name="P" value="0" />
+      <arg name="Y" value="0" />
+      <arg name="vehicle" value="$(arg vehicle)" />
+      <arg name="mavlink_udp_port" value="14560" />
+      <arg name="mavlink_tcp_port" value="4560" />
+      <arg name="ID" value="0" />
+      <arg name="gst_udp_port" value="5600" />
+      <arg name="video_uri" value="5600" />
+      <arg name="mavlink_cam_udp_port" value="14530" />
+    </include>
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="udp://:14540@localhost:14580" />
+      <arg name="gcs_url" value="" />
+      <arg name="tgt_system" value="1" />
+      <arg name="tgt_component" value="1" />
+    </include>
+  </group>
+  <group ns="uav1">
+    <arg name="ID" value="1" />
+    <arg default="udp://:14541@localhost:14581" name="fcu_url" />
+    <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+      <arg name="x" value="4.992285935" />
+      <arg name="y" value="0.27763491" />
+      <arg name="z" value="0" />
+      <arg name="R" value="0" />
+      <arg name="P" value="0" />
+      <arg name="Y" value="0" />
+      <arg name="vehicle" value="$(arg vehicle)" />
+      <arg name="mavlink_udp_port" value="14561" />
+      <arg name="mavlink_tcp_port" value="4561" />
+      <arg name="ID" value="1" />
+      <arg name="gst_udp_port" value="5601" />
+      <arg name="video_uri" value="5601" />
+      <arg name="mavlink_cam_udp_port" value="14531" />
+    </include>
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="udp://:14541@localhost:14581" />
+      <arg name="gcs_url" value="" />
+      <arg name="tgt_system" value="2" />
+      <arg name="tgt_component" value="1" />
+    </include>
+  </group>
+  <group ns="uav2">
+    <arg name="ID" value="2" />
+    <arg default="udp://:14542@localhost:14582" name="fcu_url" />
+    <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+      <arg name="x" value="-0.27763491" />
+      <arg name="y" value="4.992285935" />
+      <arg name="z" value="0" />
+      <arg name="R" value="0" />
+      <arg name="P" value="0" />
+      <arg name="Y" value="0" />
+      <arg name="vehicle" value="$(arg vehicle)" />
+      <arg name="mavlink_udp_port" value="14562" />
+      <arg name="mavlink_tcp_port" value="4562" />
+      <arg name="ID" value="2" />
+      <arg name="gst_udp_port" value="5602" />
+      <arg name="video_uri" value="5602" />
+      <arg name="mavlink_cam_udp_port" value="14532" />
+    </include>
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="udp://:14542@localhost:14582" />
+      <arg name="gcs_url" value="" />
+      <arg name="tgt_system" value="3" />
+      <arg name="tgt_component" value="1" />
+    </include>
+  </group>
+  <group ns="uav3">
+    <arg name="ID" value="3" />
+    <arg default="udp://:14543@localhost:14583" name="fcu_url" />
+    <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+      <arg name="x" value="-4.992285935" />
+      <arg name="y" value="-0.27763491" />
+      <arg name="z" value="0" />
+      <arg name="R" value="0" />
+      <arg name="P" value="0" />
+      <arg name="Y" value="0" />
+      <arg name="vehicle" value="$(arg vehicle)" />
+      <arg name="mavlink_udp_port" value="14563" />
+      <arg name="mavlink_tcp_port" value="4563" />
+      <arg name="ID" value="3" />
+      <arg name="gst_udp_port" value="5603" />
+      <arg name="video_uri" value="5603" />
+      <arg name="mavlink_cam_udp_port" value="14533" />
+    </include>
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="udp://:14543@localhost:14583" />
+      <arg name="gcs_url" value="" />
+      <arg name="tgt_system" value="4" />
+      <arg name="tgt_component" value="1" />
+    </include>
+  </group>
+  <group ns="uav4">
+    <arg name="ID" value="4" />
+    <arg default="udp://:14544@localhost:14584" name="fcu_url" />
+    <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+      <arg name="x" value="0.27763491" />
+      <arg name="y" value="-4.992285935" />
+      <arg name="z" value="0" />
+      <arg name="R" value="0" />
+      <arg name="P" value="0" />
+      <arg name="Y" value="0" />
+      <arg name="vehicle" value="$(arg vehicle)" />
+      <arg name="mavlink_udp_port" value="14564" />
+      <arg name="mavlink_tcp_port" value="4564" />
+      <arg name="ID" value="4" />
+      <arg name="gst_udp_port" value="5604" />
+      <arg name="video_uri" value="5604" />
+      <arg name="mavlink_cam_udp_port" value="14534" />
+    </include>
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="udp://:14544@localhost:14584" />
+      <arg name="gcs_url" value="" />
+      <arg name="tgt_system" value="5" />
+      <arg name="tgt_component" value="1" />
+    </include>
+  </group>
+</launch>

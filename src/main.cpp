@@ -1,5 +1,6 @@
 
 #include "formation.h"
+#include "formation_control.h"
 #include "csv.h"
 
 #define KNRM  "\033[0m"
@@ -11,21 +12,21 @@
 #define KCYN  "\033[36m"
 #define KWHT  "\033[37m"
 
-class fc_node_class
-{
-    public:
-    fc_node_class(ros::NodeHandle &nodeHandle)
-    {
+// class fc_node_class
+// {
+//     public:
+//     fc_node_class(ros::NodeHandle &nodeHandle)
+//     {
     
-    }
-};
+//     }
+// };
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "formation_controller");
     ros::NodeHandle nh("~");
     // The setpoint publishing rate MUST be faster than 2Hz
-    fc_node_class fc_node_class(nh);
+    FormationController formationController(nh);
     ros::spin();
     return 0;
 }

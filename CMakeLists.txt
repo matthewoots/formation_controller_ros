@@ -13,6 +13,7 @@ find_package(catkin
   std_msgs
   common_msgs
   tf
+  geographic_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -22,7 +23,8 @@ find_package(Eigen3 REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS 
-  geometry_msgs 
+  geometry_msgs
+  geographic_msgs 
   mavros_msgs 
   roscpp 
   std_msgs 
@@ -30,7 +32,7 @@ catkin_package(
   tf
   
   DEPENDS
-  Eigen3
+  EIGEN3
 )
 
 ###########
@@ -57,7 +59,7 @@ include_directories(
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(${PROJECT_NAME}_node 
-src/main.cpp 
+src/main.cpp src/formation_control.cpp
 )
 
 ## Rename C++ executable without prefix

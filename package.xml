@@ -14,12 +14,16 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>common_msgs</build_depend>
   <build_depend>tf</build_depend>
+  <build_depend>geographic_msgs</build_depend>
+  <!-- <build_depend>px4_path_planner</build_depend> -->
 
   <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>mavros_msgs</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>tf</build_export_depend>
+  <build_export_depend>geographic_msgs</build_export_depend>
+  <!-- <build_export_depend>px4_path_planner</build_export_depend> -->
 
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>mavros_msgs</exec_depend>
@@ -27,6 +31,8 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>common_msgs</exec_depend>
   <exec_depend>tf</exec_depend>
+  <exec_depend>geographic_msgs</exec_depend>
+  <!-- <exec_depend>px4_path_planner</exec_depend> -->
 
   <!-- Helps to enable those precompiled cmake modules -->
   <build_depend>cmake_modules</build_depend>
