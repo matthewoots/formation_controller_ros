@@ -14,8 +14,16 @@ FormationController::FormationController(ros::NodeHandle &nodeHandle) : _nh(node
     _nh.param<double>("x_offset", uav_offset.pose.position.x, 0.0);
     _nh.param<double>("y_offset", uav_offset.pose.position.y, 0.0);
     _nh.param<double>("z_offset", uav_offset.pose.position.z, 0.0);
+    _nh.param<int>("control_mode", mode, 1);
 
     offset_angle = offset_angle/180.0;
+
+    if(mode == 0){
+        ctrlMode = position;
+    }
+    else if (mode==1){
+        ctrlMode = velocity;
+    }
 
     isLeader = !_id.compare("uav0"); // return 0 if two strings compare equal
 
@@ -36,6 +44,9 @@ FormationController::FormationController(ros::NodeHandle &nodeHandle) : _nh(node
     */
     local_position_pub = _nh.advertise<geometry_msgs::PoseStamped>(
         "/" + _id + "/mavros/setpoint_position/local", 10);
+
+    setpoint_raw_pub = _nh.advertise<mavros_msgs::PositionTarget>(
+        "/" + _id + "/mavros/setpoint_raw/local", 10);
     
     /** 
     * @brief Get Mavros State of PX4
@@ -51,6 +62,9 @@ FormationController::FormationController(ros::NodeHandle &nodeHandle) : _nh(node
 
     uav_pose_sub = _nh.subscribe<geometry_msgs::PoseStamped>(
         "/" + _id + "/mavros/local_position/pose", 10, &FormationController::uavPoseCb, this);
+
+    leader_vel_enu_sub = _nh.subscribe<geometry_msgs::TwistStamped>(
+        "/" + _id + "/mavros/local_position/velocity_local", 10, &FormationController::leaderVelCb, this);
 
     uav_global_pos_sub = _nh.subscribe<sensor_msgs::NavSatFix>(
         "/" + _id + "/mavros/global_position/global", 1, &FormationController::globalPosCb, this);
@@ -183,6 +197,11 @@ void FormationController::uavPoseCb(const geometry_msgs::PoseStamped::ConstPtr &
     m.getRPY(roll, pitch, yaw);
 }
 
+void FormationController::leaderVelCb(const geometry_msgs::TwistStamped::ConstPtr &msg)
+{
+    leader_vel_enu = *msg;
+}
+
 bool FormationController::set_offboard()
 {
     ros::Rate rate(20.0);
@@ -256,13 +275,13 @@ void FormationController::missionTimer(const ros::TimerEvent &)
     switch (uavTaskState)
     {
     case kTakeOff:
-        local_position_pub.publish(takeoff_position);
+        {local_position_pub.publish(takeoff_position);
         //printf("Takeoff position z is %f\n", takeoff_position.pose.position.z);
-        break;
+        break;}
 
     case kMission:
         // compute desired local/global positon if it is follower
-        if(!isLeader)
+        {if(!isLeader)
         {
             // convert leader's current lat and long to UTM positions in meters
             // done in subscirber call back
@@ -288,14 +307,51 @@ void FormationController::missionTimer(const ros::TimerEvent &)
             
             // global_pos_desired.pose.orientation = leader_pose.pose.orientation;
             // formation_position_pub.publish(global_pos_desired);
+            switch (ctrlMode)
+            {
+            case position:
+                /* code */
+                {double desired_global_pos_x = leader_current_pos.x() + relative_x;
+                double desired_global_pos_y = leader_current_pos.y() + relative_y;
+                desired_local_pose.pose.position.x = desired_global_pos_x - uav_offset.pose.position.x;
+                desired_local_pose.pose.position.y = desired_global_pos_y - uav_offset.pose.position.y;
+                desired_local_pose.pose.position.z = leader_pose.pose.position.z;
+                desired_local_pose.pose.orientation = leader_pose.pose.orientation;
+                local_position_pub.publish(desired_local_pose);
+                break;}
 
-            double desired_global_pos_x = leader_current_pos.x() + relative_x;
-            double desired_global_pos_y = leader_current_pos.y() + relative_y;
-            desired_local_pose.pose.position.x = desired_global_pos_x - uav_offset.pose.position.x;
-            desired_local_pose.pose.position.y = desired_global_pos_y - uav_offset.pose.position.y;
-            desired_local_pose.pose.position.z = leader_pose.pose.position.z;
-            desired_local_pose.pose.orientation = leader_pose.pose.orientation;
-            local_position_pub.publish(desired_local_pose);
+            case velocity:
+                // Simple P-controller, output velocity commands
+                {
+                printf("uav %d following mode, velocity control\n",uav_id);
+                double desired_global_pos_x = leader_current_pos.x() + relative_x;
+                double desired_global_pos_y = leader_current_pos.y() + relative_y;
+                desired_local_pose.pose.position.x = desired_global_pos_x - uav_offset.pose.position.x;
+                desired_local_pose.pose.position.y = desired_global_pos_y - uav_offset.pose.position.y;
+                setpoint_raw.position.x = desired_local_pose.pose.position.x;
+                setpoint_raw.position.y = desired_local_pose.pose.position.y;
+                setpoint_raw.position.z = leader_pose.pose.position.z;
+                // setpoint_raw.velocity.x = (desired_local_pose.pose.position.x - current_pos.x())*0.5;
+                // setpoint_raw.velocity.y = (desired_local_pose.pose.position.y - current_pos.y())*0.5;
+                setpoint_raw.velocity.x = leader_vel_enu.twist.linear.x*0.5;//(desired_local_pose.pose.position.x - current_pos.x())*0.5;
+                setpoint_raw.velocity.y = leader_vel_enu.twist.linear.y*0.5;//(desired_local_pose.pose.position.y - current_pos.y())*0.5;
+                //setpoint_raw.velocity.z = leader_vel_enu.twist.linear.z;
+                setpoint_raw.yaw = leader_yaw;
+                setpoint_raw.type_mask = 2528;
+                setpoint_raw.coordinate_frame = 1; //MAV_FRAME_LOCAL_NED
+                setpoint_raw_pub.publish(setpoint_raw);
+                break;}
+            
+            default:
+                break;
+            }
+
+
+
+
+
+            
+        }
         }
     
     default:

@@ -14,7 +14,9 @@
 
 
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <geographic_msgs/GeoPoseStamped.h>
+
 #include <navsat_conversions.h>
 #include <std_msgs/Byte.h>
 #include <tf/tf.h>
@@ -44,6 +46,12 @@ enum VehicleTask
     kTakeOff,
     kMission,
     kLand
+};
+
+enum ControlMode
+{
+    position,
+    velocity
 };
 
 class FormationController
@@ -82,6 +90,8 @@ public:
 
     void uavPoseCb(const geometry_msgs::PoseStamped::ConstPtr &msg);
 
+    void leaderVelCb(const geometry_msgs::TwistStamped::ConstPtr &msg);
+
     void userCmdCb(const std_msgs::Byte::ConstPtr &msg);
 
 
@@ -90,10 +100,12 @@ private:
 
     ros::Publisher formation_position_pub; ///< publish desired UAV position in formation, this should be in global coordinate
     ros::Publisher local_position_pub; ///<< publish desired UAV position, this should be in local coordinate
+    ros::Publisher setpoint_raw_pub;
     
     ros::Subscriber uav_state_sub;
     ros::Subscriber leader_pose_sub;
     ros::Subscriber uav_pose_sub;
+    ros::Subscriber leader_vel_enu_sub;
     ros::Subscriber uav_global_pos_sub;
     ros::Subscriber leader_global_pos_sub;
     ros::Subscriber user_cmd_sub;
@@ -106,6 +118,8 @@ private:
 
     mavros_msgs::State uav_current_state;
     mavros_msgs::CommandBool arm_cmd;
+    mavros_msgs::PositionTarget setpoint_raw;
+    geometry_msgs::TwistStamped leader_vel_enu;
     sensor_msgs::NavSatFix uav_global_pos; // leader global position (lat, long, alt)
     sensor_msgs::NavSatFix leader_global_pos; // leader global position (lat, long, alt)
     geometry_msgs::PoseStamped leader_pose; // leader local pose
@@ -116,10 +130,12 @@ private:
     geometry_msgs::PoseStamped desired_local_pose;
     
     VehicleTask uavTaskState;
+    ControlMode ctrlMode;
 
     bool _initialised;
     bool isLeader;
     bool takeoff_flag;
+    int mode;
 
     double _takeoff_height;
     double pub_rate; // mission timer interval
