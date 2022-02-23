@@ -12,15 +12,6 @@
 #define KCYN  "\033[36m"
 #define KWHT  "\033[37m"
 
-// class fc_node_class
-// {
-//     public:
-//     fc_node_class(ros::NodeHandle &nodeHandle)
-//     {
-    
-//     }
-// };
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "formation_controller");

@@ -62,6 +62,10 @@ add_executable(${PROJECT_NAME}_node
 src/main.cpp src/formation_control.cpp
 )
 
+add_executable(${PROJECT_NAME}_standalone 
+src/main_standalone.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -74,5 +78,9 @@ src/main.cpp src/formation_control.cpp
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(${PROJECT_NAME}_standalone
   ${catkin_LIBRARIES}
 )
