@@ -208,18 +208,38 @@ class FormationController
         }
 
         /**
-         * @brief Get leader and offset message
+         * @brief Get leader and offset message (only message and leader)
+         */
+        // void commandPoseCb(const std_msgs::Float32MultiArray::ConstPtr &msg)
+        // {
+        //     std_msgs::Float32MultiArray multi_array = *msg;
+            
+        //     int integer_id = (int)(multi_array.data[0]);
+        //     identifier = prefix + to_string(integer_id);
+
+        //     relative.x() = (double)multi_array.data[1];
+        //     relative.y() = (double)multi_array.data[2];
+        //     relative.z() = (double)multi_array.data[3];
+
+        // }
+
+        /**
+         * @brief Get leader and offset message (Combined message with px4_path_planner)
          */
         void commandPoseCb(const std_msgs::Float32MultiArray::ConstPtr &msg)
         {
             std_msgs::Float32MultiArray multi_array = *msg;
-            
-            int integer_id = (int)(multi_array.data[0]);
+
+            // Reject data if leader is not in formation size
+            if ((int)(multi_array.data[5]) > 30)
+                return;
+                     
+            int integer_id = (int)(multi_array.data[5]);
             identifier = prefix + to_string(integer_id);
 
-            relative.x() = (double)multi_array.data[1];
-            relative.y() = (double)multi_array.data[2];
-            relative.z() = (double)multi_array.data[3];
+            relative.x() = (double)multi_array.data[6];
+            relative.y() = (double)multi_array.data[7];
+            relative.z() = (double)multi_array.data[8];
 
         }
 
