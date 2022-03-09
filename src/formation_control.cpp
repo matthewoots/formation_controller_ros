@@ -324,21 +324,36 @@ void FormationController::missionTimer(const ros::TimerEvent &)
                 // Simple P-controller, output velocity commands
                 {
                 printf("uav %d following mode, velocity control\n",uav_id);
-                double desired_global_pos_x = leader_current_pos.x() + relative_x;
-                double desired_global_pos_y = leader_current_pos.y() + relative_y;
-                desired_local_pose.pose.position.x = desired_global_pos_x - uav_offset.pose.position.x;
-                desired_local_pose.pose.position.y = desired_global_pos_y - uav_offset.pose.position.y;
-                setpoint_raw.position.x = desired_local_pose.pose.position.x;
-                setpoint_raw.position.y = desired_local_pose.pose.position.y;
-                setpoint_raw.position.z = leader_pose.pose.position.z;
-                // setpoint_raw.velocity.x = (desired_local_pose.pose.position.x - current_pos.x())*0.5;
-                // setpoint_raw.velocity.y = (desired_local_pose.pose.position.y - current_pos.y())*0.5;
-                setpoint_raw.velocity.x = leader_vel_enu.twist.linear.x*0.5;//(desired_local_pose.pose.position.x - current_pos.x())*0.5;
-                setpoint_raw.velocity.y = leader_vel_enu.twist.linear.y*0.5;//(desired_local_pose.pose.position.y - current_pos.y())*0.5;
-                //setpoint_raw.velocity.z = leader_vel_enu.twist.linear.z;
+                // double desired_global_pos_x = leader_current_pos.x() + relative_x;
+                // double desired_global_pos_y = leader_current_pos.y() + relative_y;
+                // desired_local_pose.pose.position.x = desired_global_pos_x - uav_offset.pose.position.x;
+                // desired_local_pose.pose.position.y = desired_global_pos_y - uav_offset.pose.position.y;
+                // setpoint_raw.position.x = desired_local_pose.pose.position.x;
+                // setpoint_raw.position.y = desired_local_pose.pose.position.y;
+                // setpoint_raw.position.z = leader_pose.pose.position.z;
+                // // setpoint_raw.velocity.x = (desired_local_pose.pose.position.x - current_pos.x())*0.5;
+                // // setpoint_raw.velocity.y = (desired_local_pose.pose.position.y - current_pos.y())*0.5;
+                // setpoint_raw.velocity.x = leader_vel_enu.twist.linear.x*0.5;//(desired_local_pose.pose.position.x - current_pos.x())*0.5;
+                // setpoint_raw.velocity.y = leader_vel_enu.twist.linear.y*0.5;//(desired_local_pose.pose.position.y - current_pos.y())*0.5;
+                // //setpoint_raw.velocity.z = leader_vel_enu.twist.linear.z;
+                // setpoint_raw.yaw = leader_yaw;
+                // setpoint_raw.type_mask = 2528;
+                // setpoint_raw.coordinate_frame = 1; //MAV_FRAME_LOCAL_NED
+
+                //ToDo: make the gain variable
+                setpoint_raw.velocity.x = (leader_current_pos.x() - current_pos.x()) * 1.5;
+                setpoint_raw.velocity.y = (leader_current_pos.y() - current_pos.y()) * 1.5;
+                setpoint_raw.velocity.z = (leader_current_pos.z() - current_pos.z()) * 1.5;
+                printf("vx is %f\n", double(setpoint_raw.velocity.x));
+                //printf("vel_gain is %f\n", double(vel_gain));
+                // printf("vy is %f\n", double(setpoint_raw.velocity.y));               
+                // setpoint_raw.velocity.z = leader_vel_enu.twist.linear.z;
+
                 setpoint_raw.yaw = leader_yaw;
-                setpoint_raw.type_mask = 2528;
-                setpoint_raw.coordinate_frame = 1; //MAV_FRAME_LOCAL_NED
+
+                //setpoint_raw.type_mask = 2528; //ignore vz, ax, ay, az, yaw rate (32+64+128+256+2048)
+                setpoint_raw.type_mask = 3527; //ignore x,y,z, ax, ay, az, yaw rate (1+2+4+64+128+256+2048)
+                setpoint_raw.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
                 setpoint_raw_pub.publish(setpoint_raw);
                 break;}
             
