@@ -241,6 +241,13 @@ class FormationController
             relative.y() = (double)multi_array.data[7];
             relative.z() = (double)multi_array.data[8];
 
+            // Lone subscriber to leader pose
+            leader_msg_sub = _nh.subscribe<geometry_msgs::PoseStamped>(
+            "/" + identifier + "/global_pose", 100, &FormationController::uavLeaderGlobalPoseCb, this);
+
+            // Lone subscriber to leader vel
+            leader_enu_vel_sub = _nh.subscribe<geometry_msgs::TwistStamped>(
+            "/" + identifier + "/mavros/local_position/velocity_local", 100, &FormationController::uavleaderEnuVelCb, this);
         }
 
 
