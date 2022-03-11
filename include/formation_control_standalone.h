@@ -28,6 +28,7 @@ using namespace Eigen;
 using namespace std;
 
 #define PI 3.14159
+#define MAX_UAV_ID 30
 
 enum ControlMode
 {
@@ -80,7 +81,7 @@ class FormationController
         FormationController(ros::NodeHandle &nodeHandle) : _nh(nodeHandle)
         {
             _nh.param<std::string>("agent_id", _id, "0");
-            _nh.param<double>("publish_rate", pub_rate, 30.0);
+            _nh.param<double>("publish_rate", pub_rate, 20.0);
             _nh.param<std::string>("control_mode", mode, "position");
 
             if (!mode.compare("position"))
@@ -105,7 +106,7 @@ class FormationController
             mission_timer = _nh.createTimer(ros::Duration(1/pub_rate), 
                 &FormationController::missionTimer, this, false, false);
 
-            mission_timer.start();
+            // mission_timer.start();
 
             printf("%s[formation_control_standalone.h] Formation Controller Setup for UAV %s is Ready! \n", KGRN, _id.c_str());
         }
@@ -231,9 +232,12 @@ class FormationController
             std_msgs::Float32MultiArray multi_array = *msg;
 
             // Reject data if leader is not in formation size
-            if ((int)(multi_array.data[5]) > 30)
+            if ((int)(multi_array.data[5]) > MAX_UAV_ID)
+            {
+                mission_timer.stop();
                 return;
-                     
+            }
+
             int integer_id = (int)(multi_array.data[5]);
             identifier = prefix + to_string(integer_id);
 
@@ -243,11 +247,13 @@ class FormationController
 
             // Lone subscriber to leader pose
             leader_msg_sub = _nh.subscribe<geometry_msgs::PoseStamped>(
-            "/" + identifier + "/global_pose", 100, &FormationController::uavLeaderGlobalPoseCb, this);
+            "/" + identifier + "/global_pose", 10, &FormationController::uavLeaderGlobalPoseCb, this);
 
             // Lone subscriber to leader vel
             leader_enu_vel_sub = _nh.subscribe<geometry_msgs::TwistStamped>(
-            "/" + identifier + "/mavros/local_position/velocity_local", 100, &FormationController::uavleaderEnuVelCb, this);
+            "/" + identifier + "/mavros/local_position/velocity_local", 10, &FormationController::uavleaderEnuVelCb, this);
+        
+            mission_timer.start();
         }
 
 
