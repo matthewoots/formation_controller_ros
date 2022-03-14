@@ -18,10 +18,13 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     // The setpoint publishing rate MUST be faster than 2Hz
     FormationController formationController(nh);
-    
+    // Publish rate of global pose is 30hz
+    ros::Rate loopRate(30.0);
+
     while (ros::ok())
     {
         ros::spinOnce();
+        loopRate.sleep();
     }
 
     return 0;
