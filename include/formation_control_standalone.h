@@ -68,6 +68,8 @@ class FormationController
         Vector3d leader_current_pos, current_pos;
 
         std::string prefix ="S";
+
+        double _velocity_gain;
         
 
     public:
@@ -83,6 +85,7 @@ class FormationController
             _nh.param<std::string>("agent_id", _id, "0");
             _nh.param<double>("publish_rate", pub_rate, 20.0);
             _nh.param<std::string>("control_mode", mode, "position");
+            _nh.param<double>("velocity_gain", _velocity_gain, 0.001);
 
             if (!mode.compare("position"))
                 ctrlMode = position;
@@ -146,9 +149,11 @@ class FormationController
                 setpoint_raw.position.y = leader_current_pos.y() + relative.y();
                 setpoint_raw.position.z = leader_current_pos.z();
 
-                setpoint_raw.velocity.x = leader_nwu_vel.x() * 0.5;
-                setpoint_raw.velocity.y = leader_nwu_vel.y() * 0.5;
-                // setpoint_raw.velocity.z = leader_vel_enu.twist.linear.z;
+                setpoint_raw.velocity.x = 0.4 * leader_nwu_vel.x() +
+                    (leader_current_pos.x() - current_pos.x())/(1/pub_rate) * _velocity_gain;
+                setpoint_raw.velocity.y = 0.4 * leader_nwu_vel.y() +
+                    (leader_current_pos.y() - current_pos.y())/(1/pub_rate) * _velocity_gain;
+                setpoint_raw.velocity.z = leader_nwu_vel.z();
 
                 setpoint_raw.yaw = leader_yaw;
 
